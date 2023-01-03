@@ -1,139 +1,58 @@
-"""
-## App: NLP App with Streamlit (NLPiffy)
-Author: [Jesse E.Agbe(JCharis)](https://github.com/Jcharis))\n
-Source: [Github](https://github.com/Jcharis/Streamlit_DataScience_Apps/)
-Credits: Streamlit Team,Marc Skov Madsen(For Awesome-streamlit gallery)
-Description
-This is a Natural Language Processing(NLP) Based App useful for basic NLP concepts such as follows;
-+ Tokenization & Lemmatization using Spacy
-+ Named Entity Recognition(NER) using SpaCy
-+ Sentiment Analysis using TextBlob
-+ Document/Text Summarization using Gensim/Sumy
-This is built with Streamlit Framework, an awesome framework for building ML and NLP tools.
-Purpose
-To perform basic and useful NLP task with Streamlit,Spacy,Textblob and Gensim/Sumy
-"""
+import streamlit as st
+import spacy_streamlit
+# spacy_model = "en_core_web_sm" 
+import spacy
+nlp = spacy.load('en')
 
-!pip install textblob  
-
-# Core Pkgs
-import streamlit as st 
+from PIL import Image
 import os
 
-
-# NLP Pkgs
-import textblob
-from textblob import TextBlob 
-import spacy
-from gensim.summarization import summarize
-
-# Sumy Summary Pkg
-from sumy.parsers.plaintext import PlaintextParser
-from sumy.nlp.tokenizers import Tokenizer
-from sumy.summarizers.lex_rank import LexRankSummarizer
-
-
-# Function for Sumy Summarization
-def sumy_summarizer(docx):
-	parser = PlaintextParser.from_string(docx,Tokenizer("english"))
-	lex_summarizer = LexRankSummarizer()
-	summary = lex_summarizer(parser.document,3)
-	summary_list = [str(sentence) for sentence in summary]
-	result = ' '.join(summary_list)
-	return result
-
-# Function to Analyse Tokens and Lemma
 @st.cache
-def text_analyzer(my_text):
-	nlp = spacy.load('en')
-	docx = nlp(my_text)
-	# tokens = [ token.text for token in docx]
-	allData = [('"Token":{},\n"Lemma":{}'.format(token.text,token.lemma_))for token in docx ]
-	return allData
+def load_image(img):
+	im = Image.open(img)
+	return im
 
-# Function For Extracting Entities
-@st.cache
-def entity_analyzer(my_text):
-	nlp = spacy.load('en')
-	docx = nlp(my_text)
-	tokens = [ token.text for token in docx]
-	entities = [(entity.text,entity.label_)for entity in docx.ents]
-	allData = ['"Token":{},\n"Entities":{}'.format(tokens,entities)]
-	return allData
+# Layout Templates
+title_temp ="""
+	<div style="background-color:#464e5f;padding:10px;border-radius:10px;margin:10px;">
+	<h4 style="color:white;text-align:center;">SpaCy Streamlit</h1>
+	</div>
+	"""
 
 
 def main():
-	""" NLP Based App with Streamlit """
+	st.title("SpaCy Streamlit  APP")
+	# st.markdown(title_temp,unsafe_allow_html=True)
+	our_image = Image.open(os.path.join('SpaCy_logo.svg.png'))
+	st.image(our_image)
 
-	# Title
-	st.title("NLPiffy with Streamlit")
-	st.subheader("Natural Language Processing On the Go..")
-	st.markdown("""
-    	#### Description
-    	+ This is a Natural Language Processing(NLP) Based App useful for basic NLP task
-    	Tokenization,NER,Sentiment,Summarization
-    	""")
+	menu = ['Home','NER']
+	choice = st.sidebar.selectbox('Menu',menu)
 
-	# Tokenization
-	if st.checkbox("Show Tokens and Lemma"):
-		st.subheader("Tokenize Your Text")
-
-		message = st.text_area("Enter Text","Type Here ..")
-		if st.button("Analyze"):
-			nlp_result = text_analyzer(message)
-			st.json(nlp_result)
-
-	# Entity Extraction
-	if st.checkbox("Show Named Entities"):
-		st.subheader("Analyze Your Text")
-
-		message = st.text_area("Enter Text","Type Here ..")
-		if st.button("Extract"):
-			entity_result = entity_analyzer(message)
-			st.json(entity_result)
-
-	# Sentiment Analysis
-	if st.checkbox("Show Sentiment Analysis"):
-		st.subheader("Analyse Your Text")
-
-		message = st.text_area("Enter Text","Type Here ..")
-		if st.button("Analyze"):
-			blob = TextBlob(message)
-			result_sentiment = blob.sentiment
-			st.success(result_sentiment)
-
-	# Summarization
-	if st.checkbox("Show Text Summarization"):
-		st.subheader("Summarize Your Text")
-
-		message = st.text_area("Enter Text","Type Here ..")
-		summary_options = st.selectbox("Choose Summarizer",['sumy','gensim'])
-		if st.button("Summarize"):
-			if summary_options == 'sumy':
-				st.text("Using Sumy Summarizer ..")
-				summary_result = sumy_summarizer(message)
-			elif summary_options == 'gensim':
-				st.text("Using Gensim Summarizer ..")
-				summary_result = summarize(rawtext)
-			else:
-				st.warning("Using Default Summarizer")
-				st.text("Using Gensim Summarizer ..")
-				summary_result = summarize(rawtext)
-
-		
-			st.success(summary_result)
+	if choice == 'Home':
+		st.subheader('Home')
+		raw_docx = st.text_area('Your Docs','Enter Text')
+		docx = nlp(raw_docx)
+		if st.button("Tokenize"):
+			spacy_streamlit.visualize_tokens(docx, attrs=["text", "pos_", "dep_", "ent_type_"])
 
 
+			
 
-	st.sidebar.subheader("About App")
-	st.sidebar.text("NLPiffy App with Streamlit")
-	st.sidebar.info("Cudos to the Streamlit Team")
-	
+	elif choice == 'NER':
+		st.subheader('Named Entity Recognizer')
+		raw_docx = st.text_area('Your Text','Enter Text')
+		docx = nlp(raw_docx)
+		# if st.button('Analyze'):
+		spacy_streamlit.visualize_ner(docx, labels=nlp.get_pipe("ner").labels)
 
-	st.sidebar.subheader("By")
-	st.sidebar.text("Jesse E.Agbe(JCharis)")
-	st.sidebar.text("Jesus saves@JCharisTech")
-	
+		# raw_file = st.file_uploader('Upload Text',type=['txt'])
+		# if raw_file is not None:
+		# 	docx_file = nlp(open(raw_file).read())
+		# 	if st.button('Ner Analyze'):
+		# 		spacy_streamlit.visualize_ner(docx_file, labels=nlp.get_pipe("ner").labels)
+
+
 
 if __name__ == '__main__':
 	main()
