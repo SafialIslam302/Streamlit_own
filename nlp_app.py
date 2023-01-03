@@ -13,12 +13,16 @@ This is built with Streamlit Framework, an awesome framework for building ML and
 Purpose
 To perform basic and useful NLP task with Streamlit,Spacy,Textblob and Gensim/Sumy
 """
+
+!pip install textblob  
+
 # Core Pkgs
 import streamlit as st 
 import os
 
 
 # NLP Pkgs
+import textblob
 from textblob import TextBlob 
 import spacy
 from gensim.summarization import summarize
